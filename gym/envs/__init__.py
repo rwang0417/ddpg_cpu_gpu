@@ -274,6 +274,13 @@ register(
 )
 
 register(
+    id='Swimmer6-v2',
+    entry_point='gym.envs.mujoco:Swimmer6Env',
+    max_episode_steps=1500,
+    reward_threshold=360.0,
+)
+
+register(
     id='Walker2d-v2',
     max_episode_steps=1000,
     entry_point='gym.envs.mujoco:Walker2dEnv',

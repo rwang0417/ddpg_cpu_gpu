@@ -17,7 +17,7 @@ ENV_NAME = 'CartPole-v0'
 env = gym.make(ENV_NAME)
 np.random.seed(123)
 env.seed(123)
-nb_actions = env.action_space.n
+nb_actions = 1#env.action_space.n
 
 # Next, we build a very simple model.
 model = Sequential()

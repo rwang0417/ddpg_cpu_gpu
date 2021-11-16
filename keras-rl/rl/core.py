@@ -3,6 +3,7 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
+import math
 from keras.callbacks import History
 import time
 from rl.callbacks import (
@@ -204,6 +205,13 @@ class Agent(object):
 
                     #reward = -(480*observation[0]**2 + 720*observation[1]**2 + 240*observation[2]**2 + 240*observation[3]**2)
                     #reward = -700*(observation[0]**2 + observation[1]**2)
+                    xposafter = env.env.sim.data.site_xpos[16][0]
+                    yposafter = env.env.sim.data.site_xpos[16][1]
+                    zposafter = env.env.sim.data.site_xpos[16][2]
+                    xvel = env.env.sim.data.sensordata[-3]
+                    yvel = env.env.sim.data.sensordata[-2]
+                    zvel = env.env.sim.data.sensordata[-1]
+                    reward = -40*((xposafter-3)**2 + 3*(yposafter-1)**2 + 5*(zposafter-4.5)**2 + 0.0*(xvel**2 + yvel**2 + zvel**2))
                 
                 metrics = self.backward(reward, terminal=done)
                 episode_reward += reward* gamma**(episode_step)
@@ -357,6 +365,11 @@ class Agent(object):
             done = False
 
             state_history = initial_state   #[0, np.pi, 0, 0]  #[np.pi, 0]
+            action_history = np.zeros(env.action_space.shape)
+            ## failed for t2d1
+            # env.env.init_qpos = np.array(initial_state[:math.ceil(len(initial_state)/2)])
+            # env.env.init_qvel = np.array(initial_state[math.ceil(len(initial_state)/2):])
+            # env.env.reset_model()
             i = 0
             while not done:
                 callbacks.on_step_begin(episode_step)
@@ -368,6 +381,7 @@ class Agent(object):
                 accumulated_info = {}
                 for _ in range(action_repetition):
                     callbacks.on_action_begin(action)
+                    action_history = np.vstack([action_history, action])
                     observation, r, d, info = env.step(action, process_noise_std)
                     d = False
                     observation = deepcopy(observation)
@@ -422,7 +436,7 @@ class Agent(object):
         #callbacks.on_train_end()
         #self._on_test_end()
 
-        return history, state_history, episode_reward
+        return history, state_history, episode_reward, action_history
 
     def reset_states(self):
         """Resets all internally kept states after an episode is completed.

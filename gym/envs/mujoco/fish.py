@@ -8,11 +8,11 @@ class FishEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         mujoco_env.MujocoEnv.__init__(self, 'fish_old.xml', 5, np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0]), np.zeros((13,)))
         utils.EzPickle.__init__(self)
 
-    def step(self, a):
+    def step(self, a,process_noise_std=0):
 
         ctrl_cost_coeff = 0.0001
         xposbefore = self.sim.data.qpos[0:3]
-        self.do_simulation(a, self.frame_skip)
+        self.do_simulation(a, self.frame_skip, process_noise_std)
 
         reward_fwd = -15*((self.sim.data.qpos[0])**2 + (self.sim.data.qpos[1]-0.4)**2 + (self.sim.data.qpos[2] - 0.2)**2) -\
                      .5*(np.square(self.sim.data.qpos[4:7]).sum() + (self.sim.data.qpos[3]-1)**2) #(np.square(self.sim.data.qpos[7:14]).sum())

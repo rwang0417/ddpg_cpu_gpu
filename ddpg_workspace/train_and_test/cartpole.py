@@ -19,7 +19,7 @@ ENV_NAME = 'Cartpole-v2'
 # Get the environment and extract the number of actions.
 env = gym.make(ENV_NAME)
 # np.random.seed(123)
-env.seed(123)
+# env.seed(123)
 assert len(env.action_space.shape) == 1
 nb_actions = env.action_space.shape[0]
 
@@ -53,19 +53,21 @@ x = Activation('linear')(x)
 critic = Model(inputs=[action_input, observation_input], outputs=x)
 print(critic.summary())
 
-filename_exp = 'exp_0gpu'
+filename_exp = 'exp_e/exp_4to0.01'
 log_filename_pre = '../results/Cartpole/'
-process_noise_std = 0.0
+process_noise_std = 0.45*12
 theta=0.15
+sigma=4
+sigma_min=0.01
 
 GAMMA = 0.99    # GAMMA of our cumulative reward function
 STEPS_PER_EPISODE = 30     # No. of time-steps per episode
 
 # configure and compile our agent by using built-in Keras optimizers and the metrics!
 # allocate the memory by specifying the maximum no. of samples to store
-memory = SequentialMemory(limit=500000, window_length=1)
+memory = SequentialMemory(limit=600000, window_length=1)
 # random process for exploration noise
-random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=theta, dt=0.1, mu=0., sigma=.3)
+random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=theta, dt=0.1, mu=0., sigma=sigma,sigma_min=sigma_min)
 # define the DDPG agent
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input,
                   memory=memory, nb_steps_warmup_critic=100, nb_steps_warmup_actor=100,
@@ -79,17 +81,21 @@ callbacks = common_func.build_callbacks(ENV_NAME, log_filename_pre, filename_exp
 # fitting the agent, after training is done, we save the final weights.
 # 500000
 
-agent.fit(env, nb_steps=300000, visualize=False, callbacks=callbacks, verbose=1, gamma=GAMMA, nb_max_episode_steps=STEPS_PER_EPISODE, process_noise_std=process_noise_std)
-agent.save_weights('../results/Cartpole/'+filename_exp+'/ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
-common_func.save_process_noise(ENV_NAME, log_filename_pre, filename_exp, process_noise_std, theta)
+# agent.fit(env, nb_steps=600000, visualize=False, callbacks=callbacks, verbose=1, gamma=GAMMA, nb_max_episode_steps=STEPS_PER_EPISODE, process_noise_std=process_noise_std)
+# agent.save_weights(log_filename_pre+filename_exp+'/ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+# common_func.save_process_noise(ENV_NAME, log_filename_pre, filename_exp, process_noise_std, theta)
 
 # -----------------------------------------------------------------------------------------------------------------------------------------
 # Testing phase
 
-# agent.load_weights('../results/Cartpole/'+filename_exp +'/ddpg_{}_weights.h5f'.format(ENV_NAME))
-# history, state_history_nominal, episode_reward_nominal = agent.test(env, nb_episodes=1, visualize=True, action_repetition=1, nb_max_episode_steps=STEPS_PER_EPISODE, \
-#                                                          initial_state=[0, np.pi, 0, 0], std_dev_noise=0, gamma=GAMMA, process_noise_std=process_noise_std)
+agent.load_weights(log_filename_pre+filename_exp +'/ddpg_{}_weights.h5f'.format(ENV_NAME))
+history, state_history_nominal, episode_reward_nominal, action_history = agent.test(env, nb_episodes=1, visualize=True, action_repetition=1, nb_max_episode_steps=STEPS_PER_EPISODE, \
+                                                         initial_state=[0, np.pi, 0, 0], std_dev_noise=0, gamma=GAMMA, process_noise_std=process_noise_std)
 
-# print(episode_reward_nominal, state_history_nominal)
+# np.savetxt(log_filename_pre+filename_exp+'/nominal_action.txt', action_history)
+# np.savetxt(log_filename_pre+filename_exp+'/nominal_state.txt', state_history_nominal)
+
+# print(action_history,state_history_nominal,episode_reward_nominal)
+print(state_history_nominal[-1],np.linalg.norm(state_history_nominal[-1], axis=0))
 
 # -----------------------------------------------------------------------------------------------------------------------------------------

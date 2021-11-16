@@ -12,6 +12,8 @@ from rl.random import OrnsteinUhlenbeckProcess
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint, TestLogger
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 
+import common_func
+
 ENV_NAME = 'Fish-v2'
 
 # Get the environment and extract the number of actions.
@@ -61,14 +63,10 @@ x = Activation('linear')(x)
 critic = Model(inputs=[action_input, observation_input], outputs=x)
 print(critic.summary())
 
-
-def build_callbacks(env_name):
-    checkpoint_weights_filename = '../results/Fish/exp_5/ddpg_' + env_name + '_weights_{step}.h5f'
-    log_filename = '../results/Fish/exp_5/ddpg_{}_log.json'.format(env_name)
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=10000)]
-    callbacks += [FileLogger(log_filename, interval=10000)]
-
-    return callbacks
+filename_exp='/exp_1'
+log_filename_pre = '../results/Fish/'
+process_noise_std = 0.0
+theta=0.15
 
 GAMMA = 1              # GAMMA of our cumulative reward function
 STEPS_PER_EPISODE = 1200     # No. of time-steps per episode
@@ -78,7 +76,7 @@ STEPS_PER_EPISODE = 1200     # No. of time-steps per episode
 # allocate the memory by specifying the maximum no. of samples to store
 memory = SequentialMemory(limit=800000, window_length=1)
 # random process for exploration noise
-random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=.15, dt=0.005, mu=0., sigma=.35, sigma_min=0.05, n_steps_annealing=2900000)
+random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=theta, dt=0.005, mu=0., sigma=.35, sigma_min=0.01, n_steps_annealing=2900000)
 # define the DDPG agent
 agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_action_input=action_input, batch_size=64,
                   memory=memory, nb_steps_warmup_critic=3000, nb_steps_warmup_actor=3000,
@@ -86,23 +84,25 @@ agent = DDPGAgent(nb_actions=nb_actions, actor=actor, critic=critic, critic_acti
 # compile the model
 agent.compile(Adam(lr=1e-3, clipnorm=1.), metrics=['mse'])
 
-callbacks = build_callbacks(ENV_NAME)
+callbacks = common_func.build_callbacks(ENV_NAME, log_filename_pre, filename_exp)
 
 # ----------------------------------------------------------------------------------------------------------------------------------------
 # Training phase
 
 # fitting the agent
-#agent.fit(env, nb_steps=3000000, visualize=False, callbacks=callbacks, verbose=1, gamma=GAMMA, nb_max_episode_steps=STEPS_PER_EPISODE)
+# agent.fit(env, nb_steps=3000000, visualize=False, callbacks=callbacks, verbose=1, gamma=GAMMA, nb_max_episode_steps=STEPS_PER_EPISODE,process_noise_std=process_noise_std)
 
 # After training is done, we save the final weights.
-#agent.save_weights('../results/Fish/exp_6/ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
-# -----------------------------------------------------------------------------------------------------------------------------------------
+# agent.save_weights(log_filename_pre+filename_exp+'/ddpg_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+# common_func.save_process_noise(ENV_NAME, log_filename_pre, filename_exp, process_noise_std, theta)
+
+#---------------------------------------------------------------------------------------------------------------------------------------
 # Testing phase
-agent.load_weights('../results/Fish/exp_1/ddpg_{}_weights.h5f'.format(ENV_NAME))
+agent.load_weights(log_filename_pre+filename_exp+'/ddpg_{}_weights.h5f'.format(ENV_NAME))
 
 # # Finally, evaluate our algorithm.
-# history, state_history_nominal, episode_reward_nominal = agent.test(env, nb_episodes=1, visualize=True, action_repetition=1, \
-#  	nb_max_episode_steps=STEPS_PER_EPISODE,  initial_state=np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]), \
-#  	std_dev_noise=0, gamma=GAMMA)
+history, state_history_nominal, episode_reward_nominal, action_history = agent.test(env, nb_episodes=1, visualize=True, action_repetition=1, \
+ 	nb_max_episode_steps=STEPS_PER_EPISODE,  initial_state=np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]), \
+ 	std_dev_noise=0, gamma=GAMMA)
 # print(episode_reward_nominal, state_history_nominal)
 # -----------------------------------------------------------------------------------------------------------------------------------------

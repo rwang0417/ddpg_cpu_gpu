@@ -99,6 +99,7 @@ class MujocoEnv(gym.Env):
 
     def do_simulation(self, ctrl, n_frames, process_noise_std=0):
         # print(max(abs(ctrl)))
+        ## add actuator noise only
         self.sim.data.ctrl[:] = ctrl + process_noise_std*np.random.randn(self.model.nu)
         # print(self.sim.data.ctrl[1])
         # with open('result0.txt', 'a+') as f:
@@ -106,6 +107,7 @@ class MujocoEnv(gym.Env):
         for _ in range(n_frames):
             self.sim.step()
             # print(self.sim.data.ctrl[1])
+            # add process noise
             # state = self.sim.get_state()
             # state.qpos[:] += process_noise_std*np.random.randn(self.model.nq)
             # state.qvel[:] += process_noise_std*np.random.randn(self.model.nv)

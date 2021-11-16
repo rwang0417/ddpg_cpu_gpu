@@ -51,7 +51,7 @@ ddpg_workspace
   - $(modelname) folders: training and testing data are saved here.
 
 ## Examples
-<img src="imgs4readme/ddpg_swimmer3.png" width="240" height="240" alt="swimmer3 training cost"/><img src="imgs4readme/pnoise_cartpole1S.png" width="240" height="240" alt="cartpole training cost under different process noise levels"/><img src="imgs4readme/Terminal_error_swimmer3new.png" width="240" height="240" alt="swimmer3 performance comparison between D2C and DDPG"/>
+<img src="imgs4readme/ddpg_swimmer3.png" width="270" height="240" alt="swimmer3 training cost"/><img src="imgs4readme/pnoise_cartpole1S.png" width="270" height="240" alt="cartpole training cost under different process noise levels"/><img src="imgs4readme/Terminal_error_swimmer3new.png" width="270" height="240" alt="swimmer3 performance comparison between D2C and DDPG"/>
 
 ## Troubleshooting & Logs
 - The code is first used in the preparation for the D2C DDPG comparison paper and its supplementary file which are submitted to ICML2020.
